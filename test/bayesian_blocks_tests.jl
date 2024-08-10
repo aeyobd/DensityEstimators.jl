@@ -35,7 +35,7 @@
          0.149768276985622]
 
 
-    edges = Arya.bayesian_blocks(x)
+    edges = DensityEstimators.bayesian_blocks(x)
     # output from astropy.stats.bayesian_blocks(x)
     expected = [-2.69917631, -1.24350196,  0.96430487,  2.39555174]
     @test edges ≈ expected atol=1e-8

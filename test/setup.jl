@@ -1,2 +1,2 @@
 using Test
-using Arya
+using DensityEstimators

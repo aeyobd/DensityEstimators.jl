@@ -1,7 +1,7 @@
 # code to interface with varius external packages
 
 import NearestNeighbors as nn
-import StatsBase: quantile, percentile
+import StatsBase: quantile, percentile, midpoints
 
 
 

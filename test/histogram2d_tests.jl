@@ -1,6 +1,6 @@
 using Test
 
-import Arya: histogram2d, Histogram2D
+import DensityEstimators: histogram2d, Histogram2D
 
 # Assuming the Histogram2D and histogram2d definitions are already imported.
 
