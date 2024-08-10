@@ -1,4 +1,4 @@
-@kwdef struct Histogram2D{A, B, T}  <: AbstractHistogram
+@kwdef struct Histogram2D{A, B, T}  <: AbstractDensityEstimate
     xbins::AbstractVector{A}
     ybins::AbstractVector{B}
     values::AbstractMatrix{T}
@@ -129,9 +129,9 @@ end
 function bin_indices_2d(x, y, bins, closed=:left)
     xbins, ybins = bins
     if closed == :left
-        bin_index = bin_index_left
+        bin_index = _bin_index_left
     elseif closed == :right
-        bin_index = bin_index_right
+        bin_index = _bin_index_right
     else
         throw(ArgumentError("Unknown closed method: $closed"))
     end

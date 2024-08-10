@@ -2,6 +2,10 @@ module DensityEstimators
 
 using DocStringExtensions: TYPEDEF, FIELDS
 
+
+export Histogram, Histogram2D
+
+
 include("interface.jl")
 include("bandwidth.jl")
 include("bayesian_blocks.jl")

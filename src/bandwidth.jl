@@ -29,6 +29,16 @@ function bins_sturge(x::AbstractVector)
 end
 
 
+
+"""
+calculates equal number bins over the array x with n values per bin.
+"""
+function bins_equal_number(x; n=10)
+    return [percentile(x, i) for i in LinRange(0, 100, n+1)]
+end
+
+
+
 @doc raw"""
     scotts_bins(x)
 
@@ -102,13 +112,13 @@ function bins_min_width_equal_number(a::AbstractVector{<:Real}; dx_min::Real, N_
 		throw(ArgumentError("either dx_min or N must be positive"))
 	end
 
+    bins = Vector{eltype(a)}(undef, 0)
     if length(a) == 0
-        return []
+        return bins
     end
 
 	dq = N_per_bin_min / length(a)
 
-	bins = []
 	x = minimum(a)
 	push!(bins, x)
 
