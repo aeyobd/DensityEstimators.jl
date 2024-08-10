@@ -1,4 +1,7 @@
 include("setup.jl")
+using Random
+
+Random.seed!(314159)
 
 
 tests = ["limits", "bandwidth", "histogram", "interface", "bayesian_blocks", "histogram2d",

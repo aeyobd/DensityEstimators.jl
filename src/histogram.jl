@@ -19,7 +19,7 @@ A Histogram type.
     values::AbstractVector{T}
     err::Union{AbstractVector{T}, Nothing} = nothing
 
-    normalization::Symbol = :count
+    normalization::Symbol = :none
     closed::Symbol = :left
 end
 
@@ -46,7 +46,7 @@ Computes the histogram of a vector x with respect to the bins with optional weig
 ```julia
 x = [1,1,2,3,4,5]
 h = histogram(x, 0:6)
->>> Histogram{Int64, Float64}([0, 1, 2, 3, 4, 5, 6], [0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.0], nothing, :count, :left)
+>>> Histogram{Int64, Float64}([0, 1, 2, 3, 4, 5, 6], [0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.0], nothing, :none, :left)
 ```
 
 
@@ -184,23 +184,35 @@ Creates the bins for the histogram.
 Bins can be specified as:
 - a number of bins
 - a vector of bin edges
-- a function that returns the bandwidth
+- a function that returns the bbins, or the number of bins
 
 Or bins can be left unspecified and the bandwidth may be a number or a function instead.
 """
-function make_bins(x, limits, bins::Nothing=nothing; bandwidth=nothing)
+function make_bins(x::AbstractArray, limits::Tuple{Any, Any}, bins::Nothing=nothing; bandwidth=nothing)
     if bandwidth == nothing
         throw(ArgumentError("bins or bandwidth must be specified"))
     end
 
-    bins = limits[1]:bandwidth:(limits[2]+bandwidth)
+    if bandwidth isa Function
+        bandwidth = bandwidth(x)
+    end
+
+    if bandwidth isa Real
+        bins = limits[1]:bandwidth:(limits[2]+bandwidth)
+    else
+        throw(ArgumentError("bandwidth must be a real or a function that returns a real"))
+    end
 
     return bins
 end
 
 
 
-function make_bins(x, limits, bins::Int)
+function make_bins(x::AbstractArray, limits::Tuple{<:Any, <:Any}, bins::Integer)
+    if bins < 1
+        throw(ArgumentError("if bins is number, must be greater than 0. Got $bins"))
+    end
+
     return LinRange(limits[1], limits[2], bins+1)
 end
 
@@ -213,19 +225,24 @@ function make_bins(x, limits, bins::AbstractVector)
     if length(unique(bins)) != length(bins)
         throw(ArgumentError("bins must be unique"))
     end
+
+    if length(bins) < 2
+        throw(ArgumentError("bins must have at least 2 elements"))
+    end
+
     return bins
 end
 
 
 function make_bins(x, limits, bins::Function; kwargs...)
-    h = bins(x; kwargs...)
-    if h isa Real
-        return make_bins(x, limits, bandwidth=h)
-    elseif h isa AbstractVector
-        return h
+    b = bins(x; kwargs...)
+    if b isa Integer || b isa AbstractVector
+        b = make_bins(x, limits, b)
     else
-        throw(ArgumentError("bins must be a number, a vector or a function that returns a number or a vector"))
+        throw(ArgumentError("If bins is a function, must return either an integer or a vector of bin edges. Got $(typeof(b))"))
     end
+
+    return b
 end
 
 
@@ -278,11 +295,18 @@ function normalize(hist::AbstractArray{<:Real}, volumes::AbstractArray{<:Real}, 
 end
 
 
+"""
+    calc_hist_errors(x, bins, hist; errors)
+
+Given a histogram, computes the errors for the histogram.
+"""
 function calc_hist_errors(x, bins, hist; errors=:poisson)
     if errors == :poisson
         err = poisson_errors(x, bins, hist)
-    else
+    elseif errors == :none
         err = nothing
+    else
+        throw(ArgumentError("errors must be either :poisson or :none. Got $errors"))
     end
 
     return err
