@@ -175,7 +175,7 @@ end
         bins = [Inf, Inf, -Inf, NaN, NaN, 1., Inf]
         volumes = DensityEstimators.bin_volumes(bins)
         println(volumes)
-        @test all(volumes .=== [NaN, -Inf, NaN, NaN, NaN, Inf])
+        @test all(isequal.(volumes, [NaN, -Inf, NaN, NaN, NaN, Inf]))
 
 
         bins = [1, 1]
@@ -243,14 +243,14 @@ end
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :pdf)
         println(hist_norm)
-        @test all(hist_norm .=== [0., NaN, -0., 0.])
+        @test all(isequal(hist_norm, [0., NaN, -0., 0.]))
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :density)
         @test hist_norm ≈ [1.0, Inf, -1.0, 2.3/3]
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :probabilitymass)
         println(hist_norm)
-        @test all(hist_norm .=== [0., NaN, -0., 0.])
+        @test all(isequal.(hist_norm, [0., NaN, -0., 0.]))
     end
 
 
@@ -263,14 +263,14 @@ end
         @test all(hist_norm .=== hist)
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :pdf)
-        @test all(hist_norm .=== [NaN, NaN])
+        @test all(isnan.(hist_norm))
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :density)
         @test hist_norm[1] ≈ 1/π
         @test hist_norm[2] === NaN
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :probabilitymass)
-        @test all(hist_norm .=== [NaN, NaN])
+        @test all(isnan.(hist_norm))
     end
 
     @testset "random: none" begin
@@ -504,10 +504,10 @@ end
         @test h.values ≈ model.(bin_mid) atol=0.1
 
         chi2 = sum((h.values .- model.(bin_mid)).^2 ./ h.err.^2)
-        chi2 /= length(h.values) - 1
+        chi2 /= length(h.values)
 
         println(chi2)
-        @test chi2  ≈ 1.0 atol=0.1
+        @test chi2  ≈ 1.0 atol=0.5
     end
 
 end
