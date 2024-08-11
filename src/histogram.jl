@@ -51,7 +51,7 @@ h = histogram(x, 0:6)
 
 
 """
-function histogram(x::AbstractVector, bins=bandwidth_freedman_diaconis; 
+function histogram(x::AbstractVector, bins=bins_freedman_diaconis; 
         weights=nothing,
         normalization=:none,
         limits=nothing,

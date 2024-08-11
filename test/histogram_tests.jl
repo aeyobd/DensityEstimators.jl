@@ -335,8 +335,8 @@ end
 
         hist_err = DensityEstimators.calc_hist_errors(x, bins, hist; errors = :poisson)
 
-        @test all(hist_err .≥ 0 .|| isnan.(hist_err))
-        @test all(hist_err .≤ hist .|| isnan.(hist_err))
+        @test all((hist_err .≥ 0) .| isnan.(hist_err))
+        @test all((hist_err .≤ hist) .| isnan.(hist_err))
 
         filt = .! isnan.(hist_err)
         @test hist_err[filt] ≈ sqrt.(hist[filt])
@@ -346,8 +346,8 @@ end
         hist = DensityEstimators.normalize(counts, DensityEstimators.bin_volumes(bins), :pdf)
         hist_err = DensityEstimators.calc_hist_errors(x, bins, hist; errors = :poisson)
 
-        @test all(hist_err .≥ 0 .|| isnan.(hist_err))
-        @test all(hist_err .≤ hist .|| isnan.(hist_err))
+        @test all((hist_err .≥ 0) .| isnan.(hist_err))
+        @test all((hist_err .≤ hist) .| isnan.(hist_err))
 
         filt = .! isnan.(hist_err)
         @test hist_err[filt] ≈ hist[filt] ./ sqrt.(counts[filt])
@@ -491,6 +491,8 @@ end
 
         @test h.normalization == :none
         @test h.closed == :left
+
+        h = DensityEstimators.histogram(x)
     end
 
     @testset "statistical" begin

@@ -21,6 +21,13 @@ function bandwidth_freedman_diaconis(x::AbstractVector)
 end
 
 
+function bins_freedman_diaconis(x::AbstractVector)
+    h = bandwidth_freedman_diaconis(x)
+    limits = calc_limits(x)
+    return ceil(Int, (limits[2] - limits[1]) / h)
+end
+
+
 function bins_sturge(x::AbstractVector)
     limits = calc_limits(x)
     n = length(x)
