@@ -38,15 +38,16 @@ Computes the histogram of a vector x with respect to the bins with optional weig
 - `limits=nothing`: The limits of the histogram. If nothing, the limits are the minimum and maximum of x.
 - `closed=:left`: The side of the bins that is closed. Options are :left and :right
 - `errors=:poisson`: The type of errors to compute. Options are :poisson and :none
+- `scale=identity_transform`: The scale of the histogram. Implemented options are identity_scale and log10. Requires defined methods of DensityEstimators.inverse_transform and DensityEstimators.domain to add scales
 - `kwargs...`: Additional keyword arguments to pass to the binning function.
 
 
 
 # Examples
 ```julia
-x = [1,1,2,3,4,5]
-h = histogram(x, 0:6)
->>> Histogram{Int64, Float64}([0, 1, 2, 3, 4, 5, 6], [0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.0], nothing, :none, :left)
+julia> x = [1,1,2,3,4,5]
+julia> h = histogram(x, 0:6)
+Histogram{Int64, Float64}([0, 1, 2, 3, 4, 5, 6], [0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.0], nothing, :none, :left)
 ```
 
 
@@ -57,17 +58,22 @@ function histogram(x::AbstractVector, bins=bins_freedman_diaconis;
         limits=nothing,
         closed=:left,
         errors=:poisson,
+        scale=identity_transform,
         kwargs...
     )
+    x_scaled = scale.(x)
+    inverse_scale = inverse_transform(scale)
 
-    limits = calc_limits(x, limits)
-    bins = make_bins(x, limits, bins; kwargs...)
+    limits = calc_limits(x_scaled, limits)
+    bins = make_bins(x_scaled, limits, bins; scale=scale, kwargs...)
 
-    counts, counts_low, counts_high = simple_hist(x, bins, weights, closed=closed)
-    hist = normalize(counts, bin_volumes(bins), normalization)
-    err = calc_hist_errors(x, bins, hist; errors=errors)
+    counts, counts_low, counts_high = simple_hist(x_scaled, bins, weights, closed=closed)
 
-    return Histogram(bins=bins, values=hist, err=err,
+    hist = normalize(counts, bin_volumes(inverse_scale.(bins)), normalization)
+    err = calc_hist_errors(x_scaled, bins, hist; errors=errors)
+
+
+    return Histogram(bins=inverse_scale.(bins), values=hist, err=err,
         normalization=normalization, 
         closed=closed
     )
@@ -188,7 +194,7 @@ Bins can be specified as:
 
 Or bins can be left unspecified and the bandwidth may be a number or a function instead.
 """
-function make_bins(x::AbstractArray, limits::Tuple{Any, Any}, bins::Nothing=nothing; bandwidth=nothing)
+function make_bins(x::AbstractArray, limits::Tuple{Any, Any}, bins::Nothing=nothing; bandwidth=nothing, scale=identity_transform)
     if bandwidth == nothing
         throw(ArgumentError("bins or bandwidth must be specified"))
     end
@@ -208,7 +214,7 @@ end
 
 
 
-function make_bins(x::AbstractArray, limits::Tuple{<:Any, <:Any}, bins::Integer)
+function make_bins(x::AbstractArray, limits::Tuple{<:Any, <:Any}, bins::Integer; scale=identity_transform, kwargs...)
     if bins < 1
         throw(ArgumentError("if bins is number, must be greater than 0. Got $bins"))
     end
@@ -217,7 +223,9 @@ function make_bins(x::AbstractArray, limits::Tuple{<:Any, <:Any}, bins::Integer)
 end
 
 
-function make_bins(x, limits, bins::AbstractVector)
+function make_bins(x, limits, bins::AbstractVector; scale=identity_transform)
+    bins = scale.(bins)
+
     if !issorted(bins)
         throw(ArgumentError("bins must be sorted"))
     end
@@ -234,7 +242,7 @@ function make_bins(x, limits, bins::AbstractVector)
 end
 
 
-function make_bins(x, limits, bins::Function; kwargs...)
+function make_bins(x, limits, bins::Function; scale=identity_transform, kwargs...)
     b = bins(x; kwargs...)
     if b isa Integer || b isa AbstractVector
         b = make_bins(x, limits, b)

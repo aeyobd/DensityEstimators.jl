@@ -1,4 +1,19 @@
 
+using IntervalSets: OpenInterval, ClosedInterval
+
+# scales
+
+identity_transform(x::Real) = x
+domain(::typeof(identity_transform)) = OpenInterval(-Inf, Inf)
+inverse_transform(::typeof(identity_transform)) = identity_transform
+
+inverse_transform(::typeof(log10)) = exp10
+domain(::typeof(log10)) = OpenInterval(0, Inf)
+
+inverse_transform(::typeof(log)) = exp
+domain(::typeof(log)) = OpenInterval(0, Inf)
+
+
 
 """
     calc_limits(x[, limits])

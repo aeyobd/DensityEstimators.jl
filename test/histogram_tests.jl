@@ -496,8 +496,9 @@ end
     end
 
     @testset "statistical" begin
+        # TODO: work out χ2 test for this
         x = randn(10_000)
-        bins = -3:0.2:3
+        bins = LinRange(-3, 3, 20) # nu = 20
         h = DensityEstimators.histogram(x, bins, normalization=:pdf)
 
         model(x) = exp(-x^2/2) / sqrt(2π)
@@ -508,8 +509,27 @@ end
         chi2 = sum((h.values .- model.(bin_mid)).^2 ./ h.err.^2)
         chi2 /= length(h.values)
 
-        println(chi2)
-        @test chi2  ≈ 1.0 atol=0.5
+        @test 0.2120 < chi2 < 2.619 # p = 0.0001 confidence interval
     end
+
+
+    @testset "log scaled" begin
+        x = exp.(randn(10_000))
+
+        bins = exp.(LinRange(-3, 3, 20))
+        h = DensityEstimators.histogram(x, bins, normalization=:pdf, scale=log)
+
+        model(x) = exp(-log(x)^2/2) / sqrt(2π) / x
+
+        bin_mid = DensityEstimators.midpoints(bins)
+
+        chi2 = sum((h.values .- model.(bin_mid)).^2 ./ h.err.^2)
+        chi2 /= length(h.values)
+
+        @test h.bins ≈ bins
+        @test 0.2120 < chi2 < 2.619 # p = 0.0001 confidence interval
+    end
+
+
 
 end
