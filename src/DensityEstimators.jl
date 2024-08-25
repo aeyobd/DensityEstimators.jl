@@ -16,6 +16,7 @@ include("kde2d.jl")
 include("knuth_hist.jl")
 include("limits.jl")
 include("statistics.jl")
+include("binned_statistics.jl")
 
 
 end

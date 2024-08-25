@@ -30,3 +30,7 @@ function std(x::AbstractArray, w::AbstractArray)
     return sb.std(x, sb.weights(w))
 end
 
+
+function median(x::AbstractArray; dims=:)
+    return sb.median(x, dims=dims)
+end

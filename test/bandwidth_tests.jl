@@ -8,7 +8,6 @@ import StatsBase
         N_per_bin_min = 2
         bins = DensityEstimators.bins_min_width_equal_number(x; dx_min=dx_min, N_per_bin_min=N_per_bin_min)
         @test length(bins) >= 1
-        println(bins)
         h = DensityEstimators.histogram(x, bins)
         @test all(h.values .>= N_per_bin_min)
         @test all(diff(bins) .>= dx_min)
@@ -56,7 +55,7 @@ import StatsBase
         dx_min = 0.1
         N_per_bin_min = 100
         @testset "Performance with large array" begin
-            @time bins = DensityEstimators.bins_min_width_equal_number(x; dx_min=dx_min, N_per_bin_min=N_per_bin_min)
+            bins = DensityEstimators.bins_min_width_equal_number(x; dx_min=dx_min, N_per_bin_min=N_per_bin_min)
             @test length(bins) > 0
             h = DensityEstimators.histogram(x, bins)
             @test all(h.values .>= N_per_bin_min)

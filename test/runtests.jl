@@ -5,7 +5,7 @@ Random.seed!(314159)
 
 
 tests = ["limits", "bandwidth", "histogram", "interface", "bayesian_blocks", "histogram2d",
-         "kde2d",
+         "kde2d", "binned_statistics",
         ]
 
 for test in tests

@@ -24,7 +24,6 @@ end
         limits = DensityEstimators.calc_limits(x, (nothing, up), filt_inf=true)
         @test limits[1] == x_min
         @test limits[2] === up
-        println(limits)
     end
 
     for up in [1.23, 2, 50, Inf]

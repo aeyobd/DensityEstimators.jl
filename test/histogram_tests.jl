@@ -174,7 +174,6 @@ end
 
         bins = [Inf, Inf, -Inf, NaN, NaN, 1., Inf]
         volumes = DensityEstimators.bin_volumes(bins)
-        println(volumes)
         @test all(isequal.(volumes, [NaN, -Inf, NaN, NaN, NaN, Inf]))
 
 
@@ -242,14 +241,12 @@ end
         @test hist_norm == hist
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :pdf)
-        println(hist_norm)
         @test all(isequal(hist_norm, [0., NaN, -0., 0.]))
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :density)
         @test hist_norm ≈ [1.0, Inf, -1.0, 2.3/3]
 
         hist_norm = DensityEstimators.normalize(hist, volumes, :probabilitymass)
-        println(hist_norm)
         @test all(isequal.(hist_norm, [0., NaN, -0., 0.]))
     end
 
