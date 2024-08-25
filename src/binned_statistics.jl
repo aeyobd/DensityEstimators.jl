@@ -60,12 +60,13 @@ function binned_statistic_2d(x, y, z, bins;
     limits = calc_limits_2d(x, y, limits)
     bins = make_bins_2d(x, y, bins, limits)
     idxs = bin_indices_2d(x, y, bins, closed)
+    println(idxs)
 
     Nx, Ny = length(bins[1]) - 1, length(bins[2]) - 1
     result = Matrix{eltype(z)}(undef, Nx, Ny)
 
     for i in 1:Nx, j in 1:Ny
-        filt = idxs .== (i-1) + (j-1)*Nx
+        filt = (first.(idxs) .== i) .& (last.(idxs) .== j)
         if any(filt)
             if weights === nothing
                 stat = statistic(z[filt])
