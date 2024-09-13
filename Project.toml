@@ -4,6 +4,7 @@ authors = ["Daniel Boyea"]
 version = "0.1.1-DEV-3"
 
 [deps]
+BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"

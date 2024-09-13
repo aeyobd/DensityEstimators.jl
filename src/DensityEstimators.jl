@@ -7,6 +7,8 @@ export Histogram, Histogram2D
 
 
 include("interface.jl")
+include("interpolation.jl")
+include("bspline.jl")
 include("bandwidth.jl")
 include("bayesian_blocks.jl")
 include("histogram.jl")

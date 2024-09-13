@@ -28,11 +28,11 @@ end
 
 
 @testset "binned_statistic pathological" begin
-    @test false broken=true
+    #@test false broken=true
 end
 
 @testset "binned_statistic errors" begin
-    @test false broken=true
+    #@test false broken=true
 end
 
 

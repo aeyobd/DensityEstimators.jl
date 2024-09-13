@@ -18,6 +18,4 @@ end
 
 @testset "kernel2d_epanechnikon integration" begin
     #@test DensityEstimators.integrate2d(DensityEstimators.kernel2d_epanechnikov, -1, 1, -1, 1) ≈ 1
-    @test false broken = true
-
 end
