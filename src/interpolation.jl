@@ -18,8 +18,14 @@ end
 
 
 function BSpline(knots::AbstractVector, coeffs::AbstractVector, degree::Int)
-    basis = BSK.BSplineBasis(BSK.BSplineOrder(degree + 1), copy(knots))
 
+    Nc = length(coeffs)
+    Nc_exp = length(knots) + degree  - 1
+    if Nc != Nc_exp
+        throw(DimensionMismatch("Number of coefficients must be equal to the number of knots minus the degree of the spline, got $Nc instead of $Nc_exp"))
+    end
+
+    basis = BSK.BSplineBasis(BSK.BSplineOrder(degree + 1), copy(knots))
     spline = BSK.Spline(basis, copy(coeffs))
     return BSpline(spline)
 end
@@ -27,10 +33,10 @@ end
 
 function Base.getproperty(spline::BSpline, prop::Symbol) 
     if prop == :degree
-        return BSK.degree(spline._spline)
+        return BSK.order(spline._spline) + 1
     elseif prop == :knots
         return BSK.knots(spline._spline)
-    elseif prop == :weights
+    elseif prop == :coefs
         return BSK.coefficients(spline._spline)
     else
         return getfield(spline, prop)
@@ -84,10 +90,20 @@ B_{i, k}(x) = \frac{x - t_i}{t_{i+k} - t_i} B_{i,k-1}(x) + \frac{t_{i+k+1} - x}{
 ```
 
 """
-function bspline_basis(knot::Vector{Float64}, i::Int, n::Int, x::Float64)
+function bspline_basis(knot::AbstractVector{<:Real}, i::Int, n::Int, x::Float64)
     # Base case: 0th order spline (piecewise constant)
+    if i > length(knot) - 1 - n
+        throw(DomainError("i is too large"))
+    elseif i <= 0
+        throw(DomainError("i must be positive"))
+    end
+
+
     if n == 0
-        return (knot[i] <= x < knot[i+1]) ? 1 / (knot[i+1] - knot[i]) : 0.0
+        if i == length(knot) - 1 - n
+            return (knot[i] <= x <= knot[i+1]) ? 1 : 0
+        end
+        return (knot[i] <= x < knot[i+1]) ? 1 : 0
     end
 
     # Recursive definition of B-spline
@@ -102,6 +118,21 @@ function bspline_basis(knot::Vector{Float64}, i::Int, n::Int, x::Float64)
     end
 
     return term1 + term2
+end
+
+
+
+
+function eval_spline(knot::AbstractVector, weights::AbstractVector, n::Integer, x)
+    i_low = max(1, searchsortedfirst(knot, x) - 1)
+    i_high = min(length(knot)-1-n, i_low + 2n - 1)
+    i_low = 1
+    i_high = length(knot) - 1 - n
+
+    if x == knot[end]
+        return weights[end]
+    end
+    return sum([bspline_basis(knot, i, n, x) * weights[i] for i in i_low:i_high])
 end
 
 

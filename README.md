@@ -111,6 +111,19 @@ Perhaps the most direct methods of spline fitting simply fit the splines to the 
 
 ### Classic B-splines 
 
+The definition of a bspline is 
+$$
+B_{i, 0}(x) = \begin{cases}
+c & x_i \leq x < x_{i+1} \\
+0 & {\rm otherwise}
+\end{cases}
+$$
+where $\theta$ is the heaviside step function (1 for nonzero numbers, 0 otherwise). and $c$ is some normalization coefficient.
+$$
+B_{i, d}(x) = \frac{x-x_i}{x_{i + d} - x_i} B_{i, d-1}(x) + \frac{x_{i+d+1} - x}{x_{i+d+1} - x_{i+1}} B_{i+1, d-1}(x)
+$$
+
+
 The idea with this method is to fit (or estimate) the coefficients of a _B-spline_ to the data using any number of the methods below. So, we would like to project the data onto a b-spline basis with a knot vector $x_k$ where
 $$
 f(x) \approx \sum_k \alpha_k \phi_{w_k} (x - x_k)
