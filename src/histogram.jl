@@ -37,7 +37,7 @@ Computes the histogram of a vector x with respect to the bins with optional weig
 - `normalization=:none`: Normalization of the histogram. Options are :none, :pdf, :density, :probabilitymass
 - `limits=nothing`: The limits of the histogram. If nothing, the limits are the minimum and maximum of x.
 - `closed=:left`: The side of the bins that is closed. Options are :left and :right
-- `errors=:poisson`: The type of errors to compute. Options are :poisson and :none
+- `errors=:poisson`: The type of errors to compute. Options are :poisson, :bernoulli, :weighted, and :none
 - `scale=identity_transform`: The scale of the histogram. Implemented options are identity_scale and log10. Requires defined methods of DensityEstimators.inverse_transform and DensityEstimators.domain to add scales
 - `kwargs...`: Additional keyword arguments to pass to the binning function.
 
@@ -70,7 +70,7 @@ function histogram(x::AbstractVector, bins=bins_freedman_diaconis;
     counts, counts_low, counts_high = simple_hist(x_scaled, bins, weights, closed=closed)
 
     hist = normalize(counts, bin_volumes(inverse_scale.(bins)), normalization)
-    err = calc_hist_errors(x_scaled, bins, hist; errors=errors)
+    err = calc_hist_errors(x_scaled, bins, weights, hist; errors=errors)
 
 
     return Histogram(bins=inverse_scale.(bins), values=hist, err=err,
@@ -308,24 +308,66 @@ end
 
 Given a histogram, computes the errors for the histogram.
 """
-function calc_hist_errors(x, bins, hist; errors=:poisson)
+function calc_hist_errors(x, bins, weights, hist; errors=:poisson)
     if errors == :poisson
-        err = poisson_errors(x, bins, hist)
+        err = poisson_errors(x, bins, weights, hist)
+    elseif errors == :bernoulli
+        err = bernoulli_errors(x, bins, weights, hist)
+    elseif errors == :weighted
+        err = weighted_errors(x, bins, weights, hist)
     elseif errors == :none
         err = nothing
     else
-        throw(ArgumentError("errors must be either :poisson or :none. Got $errors"))
+        throw(ArgumentError("errors must be one of :poisson, :bernoulli, :weighted, or :none. Got $errors"))
     end
 
     return err
 end
 
 """
-    poisson_errors(x, bins, hist)
+    poisson_errors(x, bins, hist, weights))
 
 Computes the poisson errors for a histogram given the values of x and the histogram.
 """
-function poisson_errors(x, bins, hist)
+function poisson_errors(x, bins, weights::Nothing, hist)
     counts = simple_hist(x, bins, nothing)[1]
     return hist ./ sqrt.(counts)
 end
+
+
+"""
+    bernoulli_errors(x, bins, weights, hist)
+"""
+function bernoulli_errors(x, bins, weights, hist)
+    idxs = bin_indices(x, bins)
+    errs = zeros(length(bins)-1)
+    for i in eachindex(errs)
+        filt = idxs .== i
+        errs[i] = sqrt(sum(@. weights[filt] * (1-weights[filt])))
+    end
+
+    errs[errs .== 0] .= NaN
+
+    return errs
+end
+
+
+
+"""
+    weighted_errors(x, bins, hist, weights)
+
+Errors based on known weights. Best used if weights are exact
+(e.g. monte carlo simulations).
+"""
+function weighted_errors(x, bins, weights, hist)
+    idxs = bin_indices(x, bins)
+    errs = zeros(length(bins)-1)
+    for i in eachindex(errs)
+        filt = idxs .== i
+        errs[i] = sqrt(sum(weights[filt] .^ 2))
+    end
+
+    errs[errs .== 0] .= NaN
+    return errs
+end
+

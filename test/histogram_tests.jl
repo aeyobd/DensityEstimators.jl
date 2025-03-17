@@ -330,7 +330,7 @@ end
         bins = -5:0.1:5
         hist, l, h = DensityEstimators.simple_hist(x, bins)
 
-        hist_err = DensityEstimators.calc_hist_errors(x, bins, hist; errors = :poisson)
+        hist_err = DensityEstimators.calc_hist_errors(x, bins, nothing, hist; errors = :poisson)
 
         @test all((hist_err .≥ 0) .| isnan.(hist_err))
         @test all((hist_err .≤ hist) .| isnan.(hist_err))
@@ -341,7 +341,7 @@ end
         counts = copy(hist)
 
         hist = DensityEstimators.normalize(counts, DensityEstimators.bin_volumes(bins), :pdf)
-        hist_err = DensityEstimators.calc_hist_errors(x, bins, hist; errors = :poisson)
+        hist_err = DensityEstimators.calc_hist_errors(x, bins, nothing, hist; errors = :poisson)
 
         @test all((hist_err .≥ 0) .| isnan.(hist_err))
         @test all((hist_err .≤ hist) .| isnan.(hist_err))
@@ -350,12 +350,41 @@ end
         @test hist_err[filt] ≈ hist[filt] ./ sqrt.(counts[filt])
     end
 
+
+    @testset "bernoulli_errror" begin
+        x = randn(1000)
+        bins = -5:0.1:5
+        w = ones(1000) / 2
+        hist, l, h = DensityEstimators.simple_hist(x, bins, w)
+        hist_err = DensityEstimators.calc_hist_errors(x, bins, w, hist; errors=:bernoulli)
+        hist, l, h = DensityEstimators.simple_hist(x, bins)
+        hist_err2 = DensityEstimators.calc_hist_errors(x, bins, nothing, hist, errors=:poisson)
+
+        @test hist_err ≈ hist_err2 / 2 nans=true rtol=1e-8
+
+
+        # TODO: more tests here
+    end
+
+    @testset "weighted_errror" begin
+        x = randn(1000)
+        bins = -5:0.1:5
+        w = ones(1000)
+        hist, l, h = DensityEstimators.simple_hist(x, bins, w)
+        hist_err = DensityEstimators.calc_hist_errors(x, bins, w, hist; errors=:weighted)
+        hist_err2 = DensityEstimators.calc_hist_errors(x, bins, nothing, hist, errors=:poisson)
+
+        @test hist_err ≈ hist_err2 nans=true
+
+        # TODO: more tests here
+    end
+
     @testset "no errors" begin
         x = randn(1000)
         bins = -5:0.1:5
         hist, l, h = DensityEstimators.simple_hist(x, bins)
 
-        hist_err = DensityEstimators.calc_hist_errors(x, bins, hist; errors = :none)
+        hist_err = DensityEstimators.calc_hist_errors(x, bins, nothing, hist; errors = :none)
         @test hist_err === nothing
     end
 
@@ -364,7 +393,7 @@ end
         bins = -1:0.1:1
         hist, _, _ = DensityEstimators.simple_hist(x, bins)
 
-        @test_throws ArgumentError DensityEstimators.calc_hist_errors(x, bins, hist; errors = :gibberish)
+        @test_throws ArgumentError DensityEstimators.calc_hist_errors(x, bins, nothing, hist; errors = :gibberish)
     end
 end
 
