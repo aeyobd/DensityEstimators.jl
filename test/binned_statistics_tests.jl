@@ -63,9 +63,6 @@ end
 
         binned_stats = DensityEstimators.binned_statistic_2d(x, y, z, bins, statistic=DensityEstimators.mean, closed=:right)
 
-        println("expected = $expected")
-        println("binned_stats = $binned_stats")
-
         nan_idx = isnan.(expected)
         @test binned_stats[.!nan_idx] ≈ expected[.!nan_idx]
         @test all(isnan.(binned_stats[nan_idx]))

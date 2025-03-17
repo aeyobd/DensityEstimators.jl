@@ -25,6 +25,10 @@ struct BSpline
             throw(ArgumentError("Knots must be sorted"))
         end
 
+        if order < 1
+            throw(ArgumentError("Order must be at least 1"))
+        end
+
         return new(knots, coeffs, order)
     end
 end
@@ -69,28 +73,36 @@ end
 Return the integral of the spline as a new spline
 """
 function integral(spline::BSpline)
-    # spline_int = BSK.integral(spline._spline)
-
     knots = knots_of(spline)
     order = order_of(spline)
-    coeffs = get_int_coefs(spline)
 
-    return BSpline([knots[1]; knots], coeffs, order+1)
+    Nend = order - 1
+    coeffs = _get_int_coefs(spline)
+    coeffs = [coeffs; fill(coeffs[end], Nend)]
+    new_knots = [knots[1]; knots; fill(knots[end], Nend+1)]
+
+    return BSpline(new_knots, coeffs, order+1)
 end
 
 
-function get_int_coefs(spline)
+"""
+    _get_int_coefs(spline::BSpline)
+
+returns the integral coefficients of the spline
+"""
+function _get_int_coefs(spline::BSpline)
     t = spline.knots
-    a = spline.coefs
-    d =spline.degree
+    a = spline.coefficients
+    k = spline.order
     
     S = length(a)
     
-    alpha=0
-    coefs = zeros(S+1)
+    coefs = similar(a, S+1)
+    coefs[1] = 0
+    alpha = zero(eltype(a))
     
     for i in 1:S
-        alpha += a[i] * (t[i + d]  - t[i]) / d
+        alpha += a[i] * (t[i + k]  - t[i]) / k
         
         coefs[i+1] = alpha
     end
@@ -121,9 +133,14 @@ function derivative(spline::BSpline, N=1)
 
     alpha = coefficients_of(spline)
 
-    alpha_1 = (k-1) * [ (alpha[i] - alpha[i-1]) / (t[i+k-1] - t[i]) for i in 2:length(alpha)]
+    Nc = length(alpha)
+    alpha_p = (k-1) * [ (alpha[i] - alpha[i-1]) / (t[i+k-1] - t[i]) for i in 2:Nc]
+    alpha_1 = (k-1) * alpha[1] / (t[k] - t[1])
 
-    spline = BSpline(t[2:end-1], alpha_1, k-1)
+    alpha_end = -(k-1) * alpha[Nc] / (t[Nc+k] - t[Nc+1])
+    alpha_p = [alpha_1; alpha_p; alpha_end]
+
+    spline = BSpline(t, alpha_p, k-1)
 
     if N == 1
         return spline
@@ -167,7 +184,7 @@ B_{i, k}(x) = \frac{x - t_i}{t_{i+k} - t_i} B_{i,k-1}(x) + \frac{t_{i+k+1} - x}{
 ```
 
 """
-function bspline_basis(knot::AbstractVector{<:Real}, i::Int, order::Int, x::Float64)
+function bspline_basis(knot::AbstractVector{<:Real}, i::Int, order::Int, x::Real)
     # Base case: 0th order spline (piecewise constant)
     Nk = length(knot)
     if i > Nk - order
