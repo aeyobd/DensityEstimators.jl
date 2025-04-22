@@ -79,27 +79,25 @@ Bandwidth may be
 - `bins=100` The bins to sample the KDE on
 - `r_trunc::Real=5.0` The truncation range for the KDE
 - `limits=nothing` The limits of the KDE. Expects a tuple of tuples
-- `weights=ones(length(x))` The weights for each point
-- `kernel=kernel_2d_gaussian` The kernel function to use
+- `weights=ones(length(x))` The weights for each point. 
+- `kernel=kernel2d_gaussian` The kernel function to use
 
 """
 function kde2d(x::AbstractVector{<:Real}, y::AbstractVector{<:Real}, bandwidth::AbstractVector{<:Real}; 
         bins=100, 
         r_trunc::Float64=5.0, 
         limits=nothing,
-        weights=ones(length(x)), 
-        kernel::Function=kernel_2d_gaussian
+        weights=nothing, 
+        kernel::Function=kernel2d_gaussian
     ) 
 
+    if isnothing(weights)
+        weights = ones(length(x)) / length(x) # density
+    end
     
-    xlims, ylims = split_limits(limits)
-    xlims = calc_limits(x, xlims)
-    ylims = calc_limits(y, ylims)
-
-    xgrid = make_bins(x, xlims, bins-1)
-    ygrid = make_bins(y, ylims, bins-1)
-
-    weights = weights / sum(weights)
+    limits = calc_limits_2d(x, y, limits)
+    xgrid, ygrid = make_bins_2d(x, y, bins, limits)
+    weights = weights
 
     kde = KDE2D(x=xgrid, y=ygrid, 
                 values=zeros(Float64, length(xgrid), length(ygrid)),
