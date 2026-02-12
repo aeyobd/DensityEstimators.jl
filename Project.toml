@@ -1,7 +1,7 @@
 name = "DensityEstimators"
 uuid = "6a64a12f-920b-4cea-9d97-f6c2170ce0ee"
 authors = ["Daniel Boyea"]
-version = "0.1.2-DEV-3"
+version = "0.1.2-DEV-4"
 
 [deps]
 BSplineKit = "093aae92-e908-43d7-9660-e50ee39d5a0a"
@@ -14,7 +14,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-julia = "1.11.4"
+julia = "1.11.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
